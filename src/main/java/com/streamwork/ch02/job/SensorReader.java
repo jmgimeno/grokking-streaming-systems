@@ -3,47 +3,39 @@ package com.streamwork.ch02.job;
 import java.net.*;
 import java.io.*;
 import java.util.List;
+import java.util.Random;
 
 import com.streamwork.ch02.api.Event;
 import com.streamwork.ch02.api.Source;
 
 class SensorReader extends Source {
-  private final BufferedReader reader;
 
-  public SensorReader(String name, int port) {
-    super(name);
-
-    reader = setupSocketReader(port);
-  }
-
-  @Override
-  public void getEvents(List<Event> eventCollector) {
-    try {
-      String vehicle = reader.readLine();
-      if (vehicle == null) {
-        // Exit when user closes the server.
-        System.exit(0);
-      }
-      eventCollector.add(new VehicleEvent(vehicle));
-      System.out.println("");  // An empty line before logging new events
-      System.out.println("SensorReader --> " + vehicle);
-    } catch (IOException e) {
-      System.out.println("Failed to read input: " + e);
+    enum VehicleTypes {
+        TRUCK, CAR, BIKE
     }
-  }
 
-  private BufferedReader setupSocketReader(int port) {
-    try {
-      Socket socket = new Socket("localhost", port);
-      InputStream input = socket.getInputStream();
-      return new BufferedReader(new InputStreamReader(input));
-    } catch (UnknownHostException e) {
-      e.printStackTrace();
-      System.exit(0);
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(0);
+    private final Random random = new Random();
+
+    public SensorReader(String name) {
+        super(name);
     }
-    return null;
-  }
+
+    @Override
+    public void getEvents(List<Event> eventCollector) {
+        try {
+            String vehicle = randomVehicle();
+            Thread.sleep(1000);
+            eventCollector.add(new VehicleEvent(vehicle));
+            System.out.println();  // An empty line before logging new events
+            System.out.println("SensorReader --> " + vehicle);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String randomVehicle() {
+        VehicleTypes[] possibleVehicles = VehicleTypes.values();
+        int randomIndex = random.nextInt(possibleVehicles.length);
+        return possibleVehicles[randomIndex].name().toLowerCase();
+    }
 }

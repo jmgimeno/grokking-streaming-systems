@@ -10,8 +10,9 @@ import com.streamwork.ch02.api.Event;
 import com.streamwork.ch02.api.Operator;
 
 class VehicleCounter extends Operator {
-  private final Map<String, Integer> countMap = new HashMap<String, Integer>();
-
+  private static final Map<String, Integer> feesPerType = Map.of("bike", 1, "car", 3, "truck", 5);
+  private final Map<String, Integer> countMap = new HashMap<>();
+  private int totalFees = 0;
   public VehicleCounter(String name) {  super(name);  }
 
   @Override
@@ -19,17 +20,7 @@ class VehicleCounter extends Operator {
     String vehicle = ((VehicleEvent)vehicleEvent).getData();
     Integer count = countMap.getOrDefault(vehicle, 0) + 1;
     countMap.put(vehicle, count);
-
-    System.out.println("VehicleCounter --> ");
-    printCountMap();
-  }
-
-  private void printCountMap() {
-    List<String> vehicles = new ArrayList<>(countMap.keySet());
-    Collections.sort(vehicles);
-
-    for (String vehicle: vehicles) {
-      System.out.println("  " + vehicle + ": " + countMap.get(vehicle));
-    }
+    totalFees += feesPerType.getOrDefault(vehicle, 0);
+    eventCollector.add(new PrintEvent(Collections.unmodifiableMap(countMap), totalFees));
   }
 }
